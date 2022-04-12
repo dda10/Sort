@@ -1,41 +1,36 @@
-def countingSort(array, place):
-    size = len(array)
-    output = [0] * size
-    count = [0] * 10
-
-    # Calculate count of elements
-    for i in range(0, size):
-        index = array[i] // place
-        count[index % 10] += 1
-
-    # Calculate cumulative count
-    for i in range(1, 10):
-        count[i] += count[i - 1]
-
-    # Place the elements in sorted order
-    i = size - 1
-    while i >= 0:
-        index = array[i] // place
-        output[count[index % 10] - 1] = array[i]
-        count[index % 10] -= 1
-        i -= 1
-
-    for i in range(0, size):
-        array[i] = output[i]
+import sys
+import array
+import tempfile
+import heapq
+assert array.array('i').itemsize == 4
 
 
-# Main function to implement radix sort
-def radixSort(array):
-    # Get maximum element
-    max_element = max(array)
-
-    # Apply counting sort to sort elements based on place value.
-    place = 1
-    while max_element // place > 0:
-        countingSort(array, place)
-        place *= 10
+def intsfromfile(f):
+    while True:
+        a = array.array('i')
+        a.fromstring(f.read(4000))
+        if not a:
+            break
+        for x in a:
+            yield x
 
 
-data = []  # Create an input list
-radixSort(data)
-print(data)
+iters = []
+while True:
+    a = array.array('i')
+    a.fromstring(sys.stdin.buffer.read(40000))
+    if not a:
+        break
+    f = tempfile.TemporaryFile()
+    array.array('i', sorted(a)).tofile(f)
+    f.seek(0)
+    iters.append(intsfromfile(f))
+
+a = array.array('i')
+for x in heapq.merge(*iters):
+    a.append(x)
+    if len(a) >= 1000:
+        a.tofile(sys.stdout.buffer)
+        del a[:]
+if a:
+    a.tofile(sys.stdout.buffer)
